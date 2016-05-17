@@ -1,6 +1,7 @@
 //This is to simulate the motion of a single motor protein
 //by calculating probabilities using given data of velocity 
-//vs force and run length vs force.
+//vs force and run length vs force. This uses Gillespie's 
+//method to reach a faster way of computing
 
 #include<iostream>
 #include<fstream>
@@ -17,8 +18,8 @@ using namespace std;
 #define THRESHOLD 0.2	//Time*rate <= THRESHOLD
 #define STEP_SIZE 8.0		//Size of one step by motor
 #define N_RUNS 20000		//Number of runs for averaging
-#define FILE_NAME_DIST "dist_avg_fixed.dat"	//To output distances
-#define FILE_NAME_VELO "velo_avg_fixed.dat"	//To output velocity
+#define FILE_NAME_DIST "dist_avg.dat"	//To output distances
+#define FILE_NAME_VELO "velo_avg.dat"	//To output velocity
 
 
 float time1;		//For time
@@ -83,10 +84,15 @@ int main(){
 
 		set_rate(force);
 
+		float p_step_gill = p_step/(p_step + p_detach);	//p = pa/sigma(p) for Gillespie
+		float p_detach_gill = p_detach/(p_step + p_detach);
+
 		for(int runs=  0; runs< N_RUNS; runs++){
 			
 			dist = 0;
 
+			time1 = 0;
+/*
 			for(time1 = 0; ; time1 += time_step){
 
 				float prob_check = rand1();
@@ -103,6 +109,27 @@ int main(){
 				}
 
 			}
+*/			
+			while(1){
+				
+				time1 += -1*log(rand1())/(rate_step + rate_detach);
+
+				float prob_check = rand1();
+
+				if(prob_check < p_step_gill){
+
+					dist += STEP_SIZE;
+
+				}
+
+				else if(prob_check >= p_step_gill && prob_check < p_step_gill + p_detach_gill){
+
+					break;
+				}
+
+			}
+
+				
 
 			dist_avg += dist;
 
